@@ -15,7 +15,18 @@
   - 实现方式：
     - select：轮询所有流，找出能读写的流，进行操作。有最大连接数限制。时间复杂度O(n)。
     - poll：链表实现，无最大连接数限制。其余类似select。
-    - epoll：基于事件驱动，知道具体哪个流发生读写操作。时间复杂度O(1)。工作模式：水平触发；边缘触发。
+    - epoll：基于事件驱动，知道具体哪个流发生读写操作。时间复杂度O(1)。linux提供的epoll相关函数：
+      ```c++
+      int epoll_create(int size);
+      int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+      int epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
+      ```
+      epoll_create：用于创建epoll句柄，调用成功，返回epoll句柄描述符，失败返回-1。  
+      epoll_ctl：注册要监听的事件类型。  
+      epoll_write：等待事件的就绪，成功时返回就绪的事件数目，调用失败时返回 -1，等待超时返回 0。  
+      工作模式：水平触发、边缘触发。
+        - 水平触发：默认工作模式，当epoll_wait检测到某描述符事件就绪并通知应用程序时，应用程序可以不立即处理该事件；下次调用epoll_wait时，会再次通知此事件。  
+        - 边缘触发： 当epoll_wait检测到某描述符事件就绪并通知应用程序时，应用程序必须立即处理该事件。如果不处理，下次调用epoll_wait时，不会再次通知此事件。
 4. 信号驱动IO模型
   - 用户线程发出IO请求后，会给对应的socket注册一个信号函数，内核准备好数据后，会通知用户线程，用户线程再调用信号函数进行读写操作。
 5. 异步IO模型
